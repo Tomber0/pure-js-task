@@ -29,3 +29,41 @@ const acceptTermsOfUse = async (termsOfUse) => {
         resolveTerms = resolve;
     });
 };
+
+const saveCanvasAsImage = (canvas, imageName) => {
+    const link = document.createElement('a');
+    link.download = imageName;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+};
+
+const fetchData = async (url) => {
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        return data;
+
+    } catch (error) {
+        console.error('Error fetching:', error);
+    }
+}
+
+
+const setupImageGallery = async () => {
+    document.getElementById('acceptButton').onclick = acceptTerms;
+    const fetchedData = await fetchData(apiUrl + '/static/json/JSON_DATA.json');
+    await acceptTermsOfUse(fetchedData.terms_of_use.paragraphs);
+    document.getElementById('termsOfUseContainer').style.display = `none`;
+    document.getElementById('mainContentContainer').style.display = `block`;
+    for (let image of fetchedData.images) {
+        const canvas = await renderImageToCanvas(apiUrl + image.image_url);
+        document.body.appendChild(canvas);
+        const saveButton = document.createElement('button');
+        saveButton.innerText = 'Save Image';
+        saveButton.addEventListener('click', () => {
+            saveCanvasAsImage(canvas, 'image.png');
+        });
+        document.body.appendChild(saveButton);
+    }
+};
+setupImageGallery();
